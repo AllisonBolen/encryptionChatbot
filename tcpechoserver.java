@@ -32,6 +32,7 @@ class TcpServerThread extends Thread{
     public void run(){
 	// main method ? 
 	try{
+	  while(true){
 	    ByteBuffer buffer = ByteBuffer.allocate(4096);
 	    sc.read(buffer);
 	    buffer.flip();
@@ -41,7 +42,8 @@ class TcpServerThread extends Thread{
 	    System.out.println("Got from client: "+message);
 	    buffer.rewind();
 	    sc.write(buffer);
-	    sc.close();
+	    //sc.close();
+	  }
 	}catch (IOException e ){
 	    // print error
 	    System.out.println("Got an IO Exception");
