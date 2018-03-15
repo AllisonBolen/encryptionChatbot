@@ -14,20 +14,46 @@ class tcpechoclient{
 	    int portNum = scan.nextInt();
 	    SocketChannel sc = SocketChannel.open();
 	    sc.connect(new InetSocketAddress(IP,portNum));
-	    Console cons = System.console();
-	    String m = cons.readLine("Enter your message: ");
-	    ByteBuffer buf = ByteBuffer.wrap(m.getBytes());
-	    sc.write(buf);
+	    System.out.println("Connected to Chat Server");
+	    TcpClientThread t = new TcpClientThread(sc);
+	    t.start();
+	    while(true){
+		    Console cons = System.console();
+		    String m = cons.readLine("Enter your message: ");
+		    ByteBuffer buf = ByteBuffer.wrap(m.getBytes());
+		    sc.write(buf);
+
+	    }
+	    
+	    
+	}catch(IOException e){
+	    System.out.println("Got an Exception");
+	}
+    }
+}
+
+class TcpClientThread extends Thread{
+    SocketChannel sc;
+    TcpClientThread(SocketChannel channel){
+	sc = channel;
+    }
+    public void run(){
+	// main method ? 
+	try{
+	  while(true){
 	    ByteBuffer buf2 = ByteBuffer.allocate(5000);
 	    sc.read(buf2);
 	    buf2.flip();
 	    byte[] a = new byte[buf2.remaining()];
 	    buf2.get(a);
 	    String message = new String(a);
-	    System.out.println("Got from server: "+message);
-	    sc.close();
-	}catch(IOException e){
-	    System.out.println("Got an Exception");
+	    System.out.println("\nGot from server: "+message);
+	    //sc.close();
+	  }
+	}catch (IOException e ){
+	    // print error
+	    System.out.println("Got an IO Exception");
 	}
+	
     }
 }
