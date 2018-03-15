@@ -2,14 +2,19 @@ import java.io.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.Scanner;
 
 class tcpechoserver{
     public static void main(String args[]){
+	Scanner scan = new Scanner(System.in);
 	try{
+	    System.out.println("Enter a port for the server to run on: ");
+	    int port = scan.nextInt();
 	    ServerSocketChannel c = ServerSocketChannel.open();
-	    c.bind(new InetSocketAddress(9877));
+	    c.bind(new InetSocketAddress(port));
 	    while(true){
 		SocketChannel sc = c.accept();
+		System.out.println("Client Connected: " + sc.getRemoteAddress());
 		TcpServerThread t = new TcpServerThread(sc);
 		t.start();
 	    }

@@ -2,12 +2,18 @@ import java.io.*;
 import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
+import java.util.Scanner;
 
 class tcpechoclient{
     public static void main(String args[]){
+	Scanner scan = new Scanner(System.in);
 	try{
+	    System.out.println("What is the server's IP address?");
+	    String IP = scan.nextLine();
+	    System.out.println("What is the server's port?");
+	    int portNum = scan.nextInt();
 	    SocketChannel sc = SocketChannel.open();
-	    sc.connect(new InetSocketAddress("127.0.0.1",9877));
+	    sc.connect(new InetSocketAddress(IP,portNum));
 	    Console cons = System.console();
 	    String m = cons.readLine("Enter your message: ");
 	    ByteBuffer buf = ByteBuffer.wrap(m.getBytes());
