@@ -30,10 +30,7 @@ class tcpechoclient{
 		    	ByteBuffer buf = ByteBuffer.wrap(m.getBytes());
 		    	sc.write(buf);
 		    }
-
-	    }
-	    
-	    
+        }
 	}catch(IOException e){
 	    System.out.println("Got an Exception");
 	}
