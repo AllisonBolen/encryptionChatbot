@@ -31,20 +31,22 @@ class tcpechoserver{
 			count++;
 	    }
 	} catch(IOException e){
-	    System.out.println("Got an IO Exception");
+	    System.out.println("Got an Exception");
 	}
     }
 }
 
 class TcpServerThread extends Thread{
     SocketChannel sc;
+    private boolean running = true;
     TcpServerThread(SocketChannel channel){
 	sc = channel;
     }
     public void run(){
+	
 	// main method ? 
 	try{
-	  while(true){
+	  while(running){
 	    ByteBuffer buffer = ByteBuffer.allocate(4096);
 	    sc.read(buffer);
 	    buffer.flip();
@@ -52,9 +54,16 @@ class TcpServerThread extends Thread{
 	    buffer.get(a);
 	    String message = new String(a);
 	    System.out.println("Got from client: "+message);
-	    buffer.rewind();
-	    sc.write(buffer);
-	    //sc.close();
+	    if(message.equals("Quit")){
+		sc.close();
+		System.out.println("Client has disconnected");
+		running = false;
+		
+	    }
+	    else{
+		buffer.rewind();
+		sc.write(buffer);
+	    }
 	  }
 	}catch (IOException e ){
 	    // print error
