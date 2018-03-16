@@ -20,8 +20,16 @@ class tcpechoclient{
 	    while(true){
 		    Console cons = System.console();
 		    String m = cons.readLine("Enter your message: ");
-		    ByteBuffer buf = ByteBuffer.wrap(m.getBytes());
-		    sc.write(buf);
+		    if(m.equals("Quit")){
+			ByteBuffer buf = ByteBuffer.wrap(m.getBytes());
+		    	sc.write(buf);
+			sc.close();
+			System.exit(0);
+		    }
+		    else{
+		    	ByteBuffer buf = ByteBuffer.wrap(m.getBytes());
+		    	sc.write(buf);
+		    }
 
 	    }
 	    
