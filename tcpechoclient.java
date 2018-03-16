@@ -17,15 +17,13 @@ class tcpechoclient{
 	    System.out.println("Connected to Chat Server");
 	    TcpClientThread t = new TcpClientThread(sc);
 	    t.start();
-	    while(true){
-		    Console cons = System.console();
-		    String m = cons.readLine("Enter your message: ");
-		    ByteBuffer buf = ByteBuffer.wrap(m.getBytes());
-		    sc.write(buf);
+	    while(true) {
+            Console cons = System.console();
+            String m = cons.readLine("Enter your message: ");
+            ByteBuffer buf = ByteBuffer.wrap(m.getBytes());
+            sc.write(buf);
 
-	    }
-	    
-	    
+        }
 	}catch(IOException e){
 	    System.out.println("Got an Exception");
 	}

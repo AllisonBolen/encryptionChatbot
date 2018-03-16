@@ -4,12 +4,15 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap; // https://stackoverflow.com/questions/2836267/concurrenthashmap-in-java
+import java.util.Vector;
 
 class tcpechoserver{
     public static void main(String args[]){
 	Scanner scan = new Scanner(System.in);
+	// list to store relevent code for the socket
+    //Vector<long> clientInfo = new Vector<long>();
 	// map to store all connected client ips and threads
-	ConcurrentHashMap<SocketAddress, Integer> clientMap = new ConcurrentHashMap<SocketAddress, Integer>();
+	ConcurrentHashMap<SocketAddress, String> clientMap = new ConcurrentHashMap<SocketAddress, String>();
 	try{
 	    System.out.println("Enter a port for the server to run on: ");
 	    int port = scan.nextInt();
@@ -18,12 +21,12 @@ class tcpechoserver{
 	    int count = 0;
 	    while(true){
 			SocketChannel sc = c.accept();
-            if (!clientMap.containsKey(sc.getRemoteAddress())) {
-                clientMap.putIfAbsent(sc.getRemoteAddress(), count);
-            }
 			System.out.println("Client Connected: " + sc.getRemoteAddress());
 			TcpServerThread t = new TcpServerThread(sc);
 			t.start();
+            if (!clientMap.containsKey(sc.getRemoteAddress())) {
+                clientMap.putIfAbsent(sc.getRemoteAddress(), t.getName());
+            }
 			System.out.println(clientMap.toString());
 			count++;
 	    }
