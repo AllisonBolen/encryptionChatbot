@@ -12,7 +12,7 @@ class tcpechoserver {
         // list to store relevent code for the socket
         Vector<TcpServerThread> threadList = new Vector<TcpServerThread>();
         // map to store all connected client ips and threads
-        ConcurrentHashMap<SocketAddress, String> clientMap = new ConcurrentHashMap<SocketAddress, String>();
+        ConcurrentHashMap<String, SocketAddress> clientMap = new ConcurrentHashMap<String, SocketAddress>();
         try {
             System.out.println("Enter a port for the server to run on: ");
             int port = scan.nextInt();
@@ -25,10 +25,10 @@ class tcpechoserver {
                 TcpServerThread t = new TcpServerThread(sc, clientMap);
                 threadList.add(t);
                 if (!clientMap.containsKey(sc.getRemoteAddress())) {
-                    clientMap.putIfAbsent(sc.getRemoteAddress(), t.getName());
+                    clientMap.putIfAbsent(t.getName(), sc.getRemoteAddress());
                 }
                 System.out.println(clientMap.toString());
-                for(TcpServerThread tOld : threadList){
+                for (TcpServerThread tOld : threadList) {
                     tOld.updateMap(clientMap);
                 }
                 t.start();
@@ -43,10 +43,11 @@ class tcpechoserver {
 
 class TcpServerThread extends Thread {
     SocketChannel sc;
-    ConcurrentHashMap<SocketAddress, String> clientMap;
+    SocketChannel tempSc;
+    ConcurrentHashMap<String, SocketAddress> clientMap;
     private boolean running = true;
 
-    TcpServerThread(SocketChannel channel, ConcurrentHashMap<SocketAddress, String> cMap) {
+    TcpServerThread(SocketChannel channel, ConcurrentHashMap<String, SocketAddress> cMap) {
         sc = channel;
         clientMap = cMap;
     }
@@ -73,7 +74,11 @@ class TcpServerThread extends Thread {
                         String command = scanner.next();
                         String name = scanner.next();
                         String password = scanner.next();
-                        if (password.equals("football") && command.equals("killuser")) {
+                        if (clientMap.get(name) == null) {
+                            String m9 = "Incorrect 'KillUser' command: '" + name + "' isnt connected.";
+                            ByteBuffer buf = ByteBuffer.wrap(m9.getBytes());
+                            sc.write(buf);
+                        } else if (password.equals("football") && command.equals("killuser")) {
                             String m1 = "Admin logged in successfully. Killing user: " + name;
                             ByteBuffer buf = ByteBuffer.wrap(m1.getBytes());
                             sc.write(buf);
@@ -97,7 +102,11 @@ class TcpServerThread extends Thread {
                     ByteBuffer buf = ByteBuffer.wrap(m5.getBytes());
                     sc.write(buf);
                 } else if (message.contains("Broadcast")) {
+                    //Map<String, SocketAddress> map = new ConcurrentHashMap<String, SocketAddress>();
                     String m6 = "Here are the connections";
+//                    for (String key : map.keySet()) {
+//                        m6 = m6 + " " + key;
+//                    }
                     ByteBuffer buf = ByteBuffer.wrap(m6.getBytes());
                     sc.write(buf);
                 } else if (message.contains("SendTo")) {
@@ -112,11 +121,19 @@ class TcpServerThread extends Thread {
                         //error checking
                         // if name isnt here check that at some point
                         // check proper command trigger statment in index one of input if not send error
+                        if (clientMap.get(name) == null) {
+                            String m9 = "Incorrect 'SendTo' command: '" + name + "' isnt connected.";
+                            ByteBuffer buf = ByteBuffer.wrap(m9.getBytes());
+                            sc.write(buf);
+                        }
                         if (!sendto.equals("SendTo")) {
                             String m7 = "Incorrect 'SendTo' command format. Use: 'SendTo USER MESSAGE'.";
                             ByteBuffer buf = ByteBuffer.wrap(m7.getBytes());
                             sc.write(buf);
                         }
+                        String m9 = "Sending: " + data + " to " + name;
+                        ByteBuffer buf = ByteBuffer.wrap(m9.getBytes());
+                        sc.write(buf);
                     } catch (Exception e) {
                         String m8 = "Incorrect 'SendTo...' command format. Use 'SendTo USER MESSAGE'. Your message is blank.";
                         ByteBuffer buf = ByteBuffer.wrap(m8.getBytes());
@@ -134,7 +151,8 @@ class TcpServerThread extends Thread {
         }
 
     }
-    void updateMap(ConcurrentHashMap<SocketAddress, String> cMap){
+
+    void updateMap(ConcurrentHashMap<String, SocketAddress> cMap) {
         clientMap = cMap;
         //System.out.println(clientMap.toString());
     }
