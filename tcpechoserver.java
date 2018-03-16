@@ -24,7 +24,6 @@ class tcpechoserver {
                 System.out.println("Client Connected: " + sc.getRemoteAddress());
                 TcpServerThread t = new TcpServerThread(sc);
                 t.start();
-
                 if (!clientMap.containsKey(sc.getRemoteAddress())) {
                     clientMap.putIfAbsent(sc.getRemoteAddress(), t.getName());
                 }
@@ -81,11 +80,15 @@ class TcpServerThread extends Thread {
                             sc.write(buf);
                         }
                     } catch (Exception e) {
-                        String m2 = "Incorrect admin command format: use COMMAND VARIABLE PASSWORD format";
-                        ByteBuffer buf = ByteBuffer.wrap(m2.getBytes());
+                        String m4 = "Incorrect admin command format: use COMMAND VARIABLE PASSWORD format";
+                        ByteBuffer buf = ByteBuffer.wrap(m4.getBytes());
                         sc.write(buf);
                     }
 
+                } else if (message.contains("List connections")){
+                    String m5 = "Here are the connections";
+                    ByteBuffer buf = ByteBuffer.wrap(m5.getBytes());
+                    sc.write(buf);
                 } else {
                     buffer.rewind();
                     sc.write(buffer);
