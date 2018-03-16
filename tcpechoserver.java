@@ -67,16 +67,24 @@ class TcpServerThread extends Thread{
 			String name = scanner.next();
 			String password = scanner.next();
 			if(password.equals("football") && command.equals("killuser")){
-				System.out.println("Admin logged in successfully. Killing user: " + name);
+				String m1 = "Admin logged in successfully. Killing user: " + name;
+				ByteBuffer buf = ByteBuffer.wrap(m1.getBytes());
+		    		sc.write(buf);
 			}
 			else if(!command.equals("killuser")){
-				System.out.println("Incorrect admin command format: use COMMAND VARIABLE PASSWORD format");
+				String m2 = "Incorrect admin command format: use COMMAND VARIABLE PASSWORD format";
+				ByteBuffer buf = ByteBuffer.wrap(m2.getBytes());
+		    		sc.write(buf);
 			}
 			else{
-				System.out.println("Incorrect password.");
+				String m3 = "Incorrect admin password.";
+				ByteBuffer buf = ByteBuffer.wrap(m3.getBytes());
+		    		sc.write(buf);
 		     	}
 		      }catch(Exception e){
-			System.out.println("Incorrect admin command format: use COMMAND VARIABLE PASSWORD format");
+			String m2 = "Incorrect admin command format: use COMMAND VARIABLE PASSWORD format";
+			ByteBuffer buf = ByteBuffer.wrap(m2.getBytes());
+		    	sc.write(buf);
 		     }
 
 	    }
