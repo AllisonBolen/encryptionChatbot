@@ -24,6 +24,7 @@ class tcpechoserver{
 			System.out.println("Client Connected: " + sc.getRemoteAddress());
 			TcpServerThread t = new TcpServerThread(sc);
 			t.start();
+			System.out.println("Thread Info: ID: " + t.getId() + " Name: " + t.getName());
 			System.out.println(clientMap.toString());
 			count++;
 	    }
@@ -55,7 +56,26 @@ class TcpServerThread extends Thread{
 		sc.close();
 		System.out.println("Client has disconnected");
 		running = false;
-		
+	    }
+	    else if(message.contains("killuser")){
+		      try{
+			Scanner scanner = new Scanner(message);
+			String command = scanner.next();
+			String name = scanner.next();
+			String password = scanner.next();
+			if(password.equals("football") && command.equals("killuser")){
+				System.out.println("Admin logged in successfully. Killing user: " + name);
+			}
+			else if(!command.equals("killuser")){
+				System.out.println("Incorrect admin command format: use COMMAND VARIABLE PASSWORD format");
+			}
+			else{
+				System.out.println("Incorrect password.");
+		     	}
+		      }catch(Exception e){
+			System.out.println("Incorrect admin command format: use COMMAND VARIABLE PASSWORD format");
+		     }
+
 	    }
 	    else{
 		buffer.rewind();
