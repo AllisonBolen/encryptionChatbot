@@ -10,7 +10,7 @@ class tcpechoserver {
     public static void main(String args[]) {
         Scanner scan = new Scanner(System.in);
         // list to store relevent code for the socket
-        //Vector<long> clientInfo = new Vector<long>();
+        Vector<String> clientInfo = new Vector<String>();
         // map to store all connected client ips and threads
         ConcurrentHashMap<SocketAddress, String> clientMap = new ConcurrentHashMap<SocketAddress, String>();
         try {
