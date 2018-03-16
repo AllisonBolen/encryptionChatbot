@@ -85,10 +85,37 @@ class TcpServerThread extends Thread {
                         sc.write(buf);
                     }
 
-                } else if (message.contains("List connections")){
+                } else if (message.contains("List connections")) {
                     String m5 = "Here are the connections";
                     ByteBuffer buf = ByteBuffer.wrap(m5.getBytes());
                     sc.write(buf);
+                } else if (message.contains("Broadcast")) {
+                    String m6 = "Here are the connections";
+                    ByteBuffer buf = ByteBuffer.wrap(m6.getBytes());
+                    sc.write(buf);
+                } else if (message.contains("SendTo")) {
+                    try {
+                        Scanner scanner = new Scanner(message);
+                        String sendto = scanner.next();
+                        String name = scanner.next();
+                        String data = scanner.next();
+                        while (scanner.hasNext()) {
+                            data = data + " " + scanner.next();
+                        }
+                        //error checking
+                        // if name isnt here check that at some point
+                        // check proper command trigger statment in index one of input if not send error
+                        if (!sendto.equals("SendTo")) {
+                            String m7 = "Incorrect 'SendTo' command format. Use: 'SendTo USER MESSAGE'.";
+                            ByteBuffer buf = ByteBuffer.wrap(m7.getBytes());
+                            sc.write(buf);
+                        }
+                    } catch (Exception e) {
+                        String m8 = "Incorrect 'SendTo...' command format. Use 'SendTo USER MESSAGE'. Your message is blank.";
+                        ByteBuffer buf = ByteBuffer.wrap(m8.getBytes());
+                        sc.write(buf);
+                    }
+
                 } else {
                     buffer.rewind();
                     sc.write(buffer);
