@@ -10,7 +10,7 @@ class tcpechoserver {
     public static void main(String args[]) {
         Scanner scan = new Scanner(System.in);
         // list to store relevent code for the socket
-        Vector<String> clientInfo = new Vector<String>();
+        Vector<TcpServerThread> threadList = new Vector<TcpServerThread>();
         // map to store all connected client ips and threads
         ConcurrentHashMap<SocketAddress, String> clientMap = new ConcurrentHashMap<SocketAddress, String>();
         try {
@@ -18,17 +18,22 @@ class tcpechoserver {
             int port = scan.nextInt();
             ServerSocketChannel c = ServerSocketChannel.open();
             c.bind(new InetSocketAddress(port));
-            int count = 0;
+
             while (true) {
                 SocketChannel sc = c.accept();
                 System.out.println("Client Connected: " + sc.getRemoteAddress());
-                TcpServerThread t = new TcpServerThread(sc);
-                t.start();
+                TcpServerThread t = new TcpServerThread(sc, clientMap);
+                threadList.add(t);
                 if (!clientMap.containsKey(sc.getRemoteAddress())) {
                     clientMap.putIfAbsent(sc.getRemoteAddress(), t.getName());
                 }
                 System.out.println(clientMap.toString());
-                count++;
+                for(TcpServerThread tOld : threadList){
+                    tOld.updateMap(clientMap);
+                }
+                t.start();
+
+
             }
         } catch (IOException e) {
             System.out.println("Got an Exception");
@@ -38,10 +43,12 @@ class tcpechoserver {
 
 class TcpServerThread extends Thread {
     SocketChannel sc;
+    ConcurrentHashMap<SocketAddress, String> clientMap;
     private boolean running = true;
 
-    TcpServerThread(SocketChannel channel) {
+    TcpServerThread(SocketChannel channel, ConcurrentHashMap<SocketAddress, String> cMap) {
         sc = channel;
+        clientMap = cMap;
     }
 
     public void run() {
@@ -86,7 +93,7 @@ class TcpServerThread extends Thread {
                     }
 
                 } else if (message.contains("List connections")) {
-                    String m5 = "Here are the connections";
+                    String m5 = clientMap.toString();
                     ByteBuffer buf = ByteBuffer.wrap(m5.getBytes());
                     sc.write(buf);
                 } else if (message.contains("Broadcast")) {
@@ -126,5 +133,9 @@ class TcpServerThread extends Thread {
             System.out.println("Got an IO Exception");
         }
 
+    }
+    void updateMap(ConcurrentHashMap<SocketAddress, String> cMap){
+        clientMap = cMap;
+        //System.out.println(clientMap.toString());
     }
 }
