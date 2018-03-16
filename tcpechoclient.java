@@ -49,11 +49,18 @@ class TcpClientThread extends Thread {
             while (true) {
                 ByteBuffer buf2 = ByteBuffer.allocate(5000);
                 sc.read(buf2);
+
                 buf2.flip();
                 byte[] a = new byte[buf2.remaining()];
                 buf2.get(a);
                 String message = new String(a);
                 System.out.println("\nGot from server: " + message);
+                if (message.equals("Quit")) {
+                    ByteBuffer buf = ByteBuffer.wrap(message.getBytes());
+                    sc.write(buf);
+                    sc.close();
+                    System.exit(0);
+                }
                 //sc.close();
             }
         } catch (IOException e) {
