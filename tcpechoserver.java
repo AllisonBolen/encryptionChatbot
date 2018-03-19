@@ -19,6 +19,7 @@ class tcpechoserver {
         Vector<TcpServerThread> threadList = new Vector<TcpServerThread>();
         // map to store all connected client ips and threads
         ConcurrentHashMap<TcpServerThread, SocketChannel> clientMap = new ConcurrentHashMap<TcpServerThread, SocketChannel>();
+        Map<TcpServerThread, SocketChannel> map = clientMap;
         try {
             System.out.println("Enter a port for the server to run on: ");
             int port = scan.nextInt();
@@ -35,12 +36,10 @@ class tcpechoserver {
                 }
                 System.out.println(clientMap.toString());
                 // this can be condensed and use the map to loop
-                for (TcpServerThread tOld : threadList) {
-                    tOld.updateMap(clientMap);
+                for (Map.Entry<TcpServerThread, SocketChannel> entry : map.entrySet()) {
+                    entry.getKey().updateMap(clientMap);
                 }
                 t.start();
-
-
             }
         } catch (IOException e) {
             System.out.println("Got an Exception");
@@ -53,6 +52,7 @@ class TcpServerThread extends Thread {
     SocketChannel tempSc;
     Map<TcpServerThread, SocketChannel> map;
     ConcurrentHashMap<TcpServerThread, SocketChannel> clientMap;
+
     private boolean running = true;
 
     TcpServerThread(SocketChannel channel, ConcurrentHashMap<TcpServerThread, SocketChannel> cMap) {
@@ -62,7 +62,6 @@ class TcpServerThread extends Thread {
     }
 
     public void run() {
-
         // main method ?
         try {
             while (running) {
@@ -76,7 +75,6 @@ class TcpServerThread extends Thread {
                 if (message.equals("Quit")) {
                     sc.close();
                     System.out.println("Client has disconnected");
-                    // remove it from the map //// this may cause issuse when we remove soemthign here but dont remove it in the main how do we do that
                     running = false;
                 } else if (message.contains("killuser")) {
                     try {
@@ -115,9 +113,9 @@ class TcpServerThread extends Thread {
                         send(sc, m4);
                     }
 
-                } else if (message.contains("List connections")) {
+                } else if (message.contains("list connections")) {
                     send(sc, printMap());
-                } else if (message.contains("Broadcast")) { // broad cast command
+                } else if (message.contains("broadcast")) { // broad cast command
 
                     try {
                         Scanner scanner = new Scanner(message);
@@ -126,7 +124,7 @@ class TcpServerThread extends Thread {
                         while (scanner.hasNext()) {
                             data = data + " " + scanner.next();
                         }
-                        if (!bd.equals("Broadcast")) { // check proper command trigger statment in index one of input if not send error
+                        if (!bd.equals("broadcast")) { // check proper command trigger statment in index one of input if not send error
                             String m7 = "Incorrect 'Broadcast' command format. Use: 'Broadcast MESSAGE'.";
                             send(sc, m7);
                         } else { // broad cast to all scockets in map
@@ -141,7 +139,7 @@ class TcpServerThread extends Thread {
                         send(sc, m8);
                     }
 
-                } else if (message.contains("SendTo")) {
+                } else if (message.contains("sendTo")) {
                     try {
                         Scanner scanner = new Scanner(message);
                         String sendto = scanner.next();
@@ -153,7 +151,7 @@ class TcpServerThread extends Thread {
                         //error checking
                         // if name isnt here check that at some point
                         // check proper command trigger statment in index one of input if not send error
-                        if (!sendto.equals("SendTo")) {
+                        if (!sendto.equals("sendTo")) {
                             String m7 = "Incorrect 'SendTo' command format. Use: 'SendTo USER MESSAGE'.";
                             send(sc, m7);
                         } else {
@@ -189,13 +187,11 @@ class TcpServerThread extends Thread {
             // print error
             System.out.println("Got an IO Exception");
         }
-
     }
 
     void updateMap(ConcurrentHashMap<TcpServerThread, SocketChannel> cMap) {
         clientMap = cMap;
         map = clientMap;
-        //System.out.println(clientMap.toString());
     }
 
     String printMap() {
