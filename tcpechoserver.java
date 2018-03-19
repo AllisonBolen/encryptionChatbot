@@ -42,7 +42,7 @@ class tcpechoserver {
                 t.start();
             }
         } catch (IOException e) {
-            System.out.println("Got an Exception");
+            System.out.println("Got an Exception HERE 2");
         }
     }
 }
@@ -89,6 +89,7 @@ class TcpServerThread extends Thread {
                                 if (Integer.parseInt(name) == entry.getKey().getId()) {
                                     sent = true;
                                     String m10 = "Quit";
+                                    entry.getKey().setRunning(false);
                                     SocketChannel sock = entry.getValue();
                                     String m1 = "Admin logged in successfully. Killing user: " + name;
                                     send(sc, m1);
@@ -185,7 +186,7 @@ class TcpServerThread extends Thread {
             }
         } catch (IOException e) {
             // print error
-            System.out.println("Got an IO Exception");
+            System.out.println("Got an IO Exception HERE 3");
         }
     }
 
@@ -199,14 +200,29 @@ class TcpServerThread extends Thread {
         try {
             for (Map.Entry<TcpServerThread, SocketChannel> entry : map.entrySet()) {
                 TcpServerThread t = entry.getKey();
-                SocketChannel s = entry.getValue();
-                data = data + "\nClient id: " + t.getId() + ", " + "IPAddress: " + s.getRemoteAddress();
+                if(t.isRunning()) {
+                    System.out.println("here 2: " + t.getId());
+
+                    SocketChannel s = entry.getValue();
+                    System.out.println("here 3");
+
+                    data = data + "\nClient id: " + t.getId() + ", " + "IPAddress: " + s.getRemoteAddress();
+                    System.out.println("here 4");
+                }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             // print error
-            System.out.println("Got an IO Exception");
+            System.out.println("Got an IO Exception HERE 4: "+ e);
         }
         return data;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
     }
 
     void send(SocketChannel socket, String mes) {
@@ -215,7 +231,7 @@ class TcpServerThread extends Thread {
             socket.write(buf);
         } catch (IOException e) {
             // print error
-            System.out.println("Got an IO Exception");
+            System.out.println("Got an IO Exception HERE 5");
         }
     }
 }
