@@ -103,14 +103,14 @@ class TcpServerThread extends Thread {
                             }
 
                         } else if (!command.equals("killuser")) {
-                            String m2 = "Incorrect admin command format: use COMMAND VARIABLE PASSWORD format";
+                            String m2 = "Incorrect admin command format: use COMMAND INTEGER PASSWORD format";
                             send(sc, m2);
                         } else {
                             String m3 = "Incorrect admin password.";
                             send(sc, m3);
                         }
                     } catch (Exception e) {
-                        String m4 = "Incorrect admin command format: use COMMAND VARIABLE PASSWORD format";
+                        String m4 = "Incorrect admin command format: use COMMAND INTEGER PASSWORD format";
                         send(sc, m4);
                     }
 
