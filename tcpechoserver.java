@@ -42,7 +42,7 @@ class tcpechoserver {
                 t.start();
             }
         } catch (IOException e) {
-            System.out.println("Got an Exception HERE 2");
+            System.out.println("Issue connecting to port.");
         }
     }
 }
