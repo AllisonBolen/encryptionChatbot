@@ -5,15 +5,16 @@ import java.nio.channels.*;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap; // https://stackoverflow.com/questions/2836267/concurrenthashmap-in-java
 import java.util.Vector;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 
+
 class tcpechoserver {
     public static void main(String args[]) {
+	cryptotest ct = new cryptotest();
         Scanner scan = new Scanner(System.in);
         // list to store relevent code for the socket
         Vector<TcpServerThread> threadList = new Vector<TcpServerThread>();
