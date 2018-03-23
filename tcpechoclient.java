@@ -37,7 +37,7 @@ class tcpechoclient {
             sc.write(buffer);
 
             // create thread for this client
-            TcpClientThread t = new TcpClientThread(sc, ct, s);
+            TcpClientThread t = new TcpClientThread(sc);
             t.start();
             while (true) {
                 // create random iv params
@@ -70,12 +70,9 @@ class tcpechoclient {
 
 class TcpClientThread extends Thread {
     SocketChannel sc;
-    cryptotest ct;
-    SecretKey s;
-    TcpClientThread(SocketChannel channel, cryptotest c, SecretKey sk) {
+
+    TcpClientThread(SocketChannel channel) {
         sc = channel;
-        ct = c;
-        s = sk;
     }
 
     public void run() {
@@ -88,16 +85,7 @@ class TcpClientThread extends Thread {
                 buf2.flip();
                 byte[] a = new byte[buf2.remaining()];
                 buf2.get(a);
-                byte[] ivBytesReceived = Arrays.copyOfRange(a, 0, 16);
-                IvParameterSpec ivReceived = new IvParameterSpec(ivBytesReceived);
-//                r2.nextBytes(ivBytesReceived);
-
-                String message = new String(Arrays.copyOfRange(a, 16, a.length));
-
-                // decrypt message
-                byte decryptedplaintext[] = ct.decrypt(a, s, ivReceived);
-                String dpt = new String(decryptedplaintext);
-
+                String message = new String(a);
                 System.out.println("\nGot from server: " + message);
                 if (message.equals("Quit")) {
                     ByteBuffer buf = ByteBuffer.wrap(message.getBytes());
