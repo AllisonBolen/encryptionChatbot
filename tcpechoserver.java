@@ -127,6 +127,7 @@ class TcpServerThread extends Thread {
                                     String m1 = "Admin logged in successfully. Killing user: " + name;
                                     send(sc, m1, this.symKey);
                                     send(sock, m10, entry.getKey().symKey);
+                                    sock.close;
                                 }
                             }
                             if (!sent) {
@@ -163,8 +164,10 @@ class TcpServerThread extends Thread {
                         } else { // broad cast to all scockets in map
                             String info = "From Broadcast: " + data;
                             for (Map.Entry<TcpServerThread, SocketChannel> entry : map.entrySet()) {
-                                ByteBuffer buf = ByteBuffer.wrap(info.getBytes());
-                                send(entry.getValue(), info, entry.getKey().symKey);
+                                if(t.isRunning()) {
+                                    ByteBuffer buf = ByteBuffer.wrap(info.getBytes());
+                                    send(entry.getValue(), info, entry.getKey().symKey);
+                                }
                             }
                         }
                     } catch (Exception e) {
@@ -263,8 +266,6 @@ class TcpServerThread extends Thread {
         r.nextBytes(ivbytes);
         IvParameterSpec iv = new IvParameterSpec(ivbytes);
         byte[] enMess = ct.encrypt(mes.getBytes(), symKey, iv);
-
-
 
         //ByteBuffer buf = ByteBuffer.wrap(ivbytes).wrap(enMess);
         ByteBuffer reffub = ByteBuffer.allocate(enMess.length + ivbytes.length);
