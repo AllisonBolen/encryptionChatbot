@@ -163,7 +163,7 @@ class TcpServerThread extends Thread {
                         } else { // broad cast to all scockets in map
                             String info = "From Broadcast: " + data;
                             for (Map.Entry<TcpServerThread, SocketChannel> entry : map.entrySet()) {
-                                if(t.isRunning()) {
+                                if(entry.getKey().isRunning()) {
                                     ByteBuffer buf = ByteBuffer.wrap(info.getBytes());
                                     send(entry.getValue(), info, entry.getKey().symKey);
                                 }
