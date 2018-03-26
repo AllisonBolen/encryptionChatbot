@@ -17,7 +17,7 @@ class tcpechoclient {
         cryptotest ct = new cryptotest();
         ct.setPublicKey("RSApub.der");
         SecretKey s = ct.generateAESKey();
-        byte encryptedsecret[] = ct.RSAEncrypt(s.getEncoded());
+        byte[] encryptedsecret = ct.RSAEncrypt(s.getEncoded());
         SecureRandom r = new SecureRandom();
 
         try {
@@ -49,13 +49,13 @@ class tcpechoclient {
 
                 if (m.equals("Quit")) {
                     // encrypt message
-                    byte ciphertext[] = ct.encrypt(m.getBytes(), s, iv2);
+                    byte[] ciphertext = ct.encrypt(m.getBytes(), s, iv2);
                     //
                     ByteBuffer reffub = ByteBuffer.allocate(ciphertext.length + ivBytes2.length);
                     reffub.put(ivBytes2);
                     reffub.put(ciphertext);
                     reffub.flip();
-                    byte total[] = new byte[reffub.remaining()];
+                    byte[] total = new byte[reffub.remaining()];
                     reffub.get(total);
                     reffub.flip();
                     sc.write(reffub);
@@ -63,7 +63,7 @@ class tcpechoclient {
                     System.exit(0);
                 } else {
                     // encrypt the message
-                    byte ciphertext[] = ct.encrypt(m.getBytes(), s, iv2);
+                    byte[] ciphertext = ct.encrypt(m.getBytes(), s, iv2);
                     //
                     System.out.println("Cipher: "+ ciphertext + " " + " length: " + ciphertext.length);
                     System.out.println("IvBytes: "+ ivBytes2 + " " + " length: " + ivBytes2.length);
@@ -71,7 +71,7 @@ class tcpechoclient {
                     reffub.put(ivBytes2);
                     reffub.put(ciphertext);
                     reffub.flip();
-                    byte total[] = new byte[reffub.remaining()];
+                    byte[] total = new byte[reffub.remaining()];
                     reffub.get(total);
                     reffub.flip();
                     sc.write(reffub);
@@ -89,6 +89,8 @@ class TcpClientThread extends Thread {
     SocketChannel sc;
     cryptotest ct;
     SecretKey s;
+    SecureRandom r = new SecureRandom();
+
     TcpClientThread(SocketChannel channel, cryptotest c, SecretKey sk) {
         sc = channel;
         ct = c;
@@ -111,8 +113,6 @@ class TcpClientThread extends Thread {
                 IvParameterSpec ivReceived = new IvParameterSpec(ivBytesReceived);
 
                 byte[] A = Arrays.copyOfRange(a, 16, a.length);
-                System.out.println("Cipher: "+ A + " " + " length: " + A.length);
-                System.out.println("IvBytes: "+ ivBytesReceived + " " + " length: " + ivBytesReceived.length);
 
                 byte[] decryptedplaintext = ct.decrypt(A, s, ivReceived);
                 String message = new String(decryptedplaintext);
@@ -120,8 +120,21 @@ class TcpClientThread extends Thread {
                 ////////////////////////
                 System.out.println("\nGot from server: " + message);
                 if (message.equals("Quit")) {
-                    ByteBuffer buf = ByteBuffer.wrap(message.getBytes());
-                    sc.write(buf);
+                    byte ivB2[] = new byte[16];
+                    r.nextBytes(ivB2);
+                    IvParameterSpec i2 = new IvParameterSpec(ivB2);
+                    // encrypt
+                    byte[] ciphertext = ct.encrypt(message.getBytes(), s, i2);
+                    //
+                    ByteBuffer reffub = ByteBuffer.allocate(ciphertext.length + ivB2.length);
+                    reffub.put(ivB2);
+                    reffub.put(ciphertext);
+                    reffub.flip();
+                    byte total[] = new byte[reffub.remaining()];
+                    reffub.get(total);
+                    reffub.flip();
+
+                    sc.write(reffub);
                     sc.close();
                     System.exit(0);
                 }

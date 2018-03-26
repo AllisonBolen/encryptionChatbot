@@ -46,7 +46,6 @@ class tcpechoserver {
                 buffer.get(a);
 
                 // key
-                //String message = new String(Arrays.copyOfRange(a, 16, a.length));
                 // decyrpt a for the key we need
                 byte decryptedsecret[] = ct.RSADecrypt(a);
                 SecretKey ds = new SecretKeySpec(decryptedsecret,"AES");
@@ -101,6 +100,7 @@ class TcpServerThread extends Thread {
                 ///////////////////// decrypt messgage
                 byte[] ivBytesReceived = Arrays.copyOfRange(a, 0, 16);
                 IvParameterSpec ivReceived = new IvParameterSpec(ivBytesReceived);
+                System.out.println("a: "+ a + " " + " length: " + a.length);
 
                 byte[] A = Arrays.copyOfRange(a, 16, a.length);
                 System.out.println("Cipher: "+ A + " " + " length: " + A.length);
@@ -274,6 +274,8 @@ class TcpServerThread extends Thread {
         r.nextBytes(ivbytes);
         IvParameterSpec iv = new IvParameterSpec(ivbytes);
         byte[] enMess = ct.encrypt(mes.getBytes(), symKey, iv);
+
+
 
         //ByteBuffer buf = ByteBuffer.wrap(ivbytes).wrap(enMess);
         ByteBuffer reffub = ByteBuffer.allocate(enMess.length + ivbytes.length);
