@@ -133,8 +133,6 @@ class TcpServerThread extends Thread {
                                     String m1 = "Admin logged in successfully. Killing user: " + name;
                                     send(sc, m1, this.symKey);
                                     send(sock, m10, entry.getKey().symKey);
-//                                    ByteBuffer buf2 = ByteBuffer.wrap(m10.getBytes());
-//                                    sock.write(buf2);
                                 }
                             }
                             if (!sent) {

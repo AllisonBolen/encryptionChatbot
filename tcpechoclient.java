@@ -32,7 +32,7 @@ class tcpechoclient {
             // send initial sym key to server for this client
             ByteBuffer buffer = ByteBuffer.wrap(encryptedsecret);
             sc.write(buffer);
-            System.out.println("Got symKey from client");
+            System.out.println("Made and sent symKey to server");
 
             // create thread for this client
             TcpClientThread t = new TcpClientThread(sc, ct, s);
@@ -50,14 +50,21 @@ class tcpechoclient {
                 if (m.equals("Quit")) {
                     // encrypt message
                     byte ciphertext[] = ct.encrypt(m.getBytes(), s, iv2);
-                    ByteBuffer reffub = ByteBuffer.wrap(ivBytes2).wrap(ciphertext);
+                    //
+                    ByteBuffer reffub = ByteBuffer.allocate(ciphertext.length + ivBytes2.length);
+                    reffub.put(ivBytes2);
+                    reffub.put(ciphertext);
+                    reffub.flip();
+                    byte total[] = new byte[reffub.remaining()];
+                    reffub.get(total);
+                    reffub.flip();
                     sc.write(reffub);
-
                     sc.close();
                     System.exit(0);
                 } else {
                     // encrypt the message
                     byte ciphertext[] = ct.encrypt(m.getBytes(), s, iv2);
+                    //
                     System.out.println("Cipher: "+ ciphertext + " " + " length: " + ciphertext.length);
                     System.out.println("IvBytes: "+ ivBytes2 + " " + " length: " + ivBytes2.length);
                     ByteBuffer reffub = ByteBuffer.allocate(ciphertext.length + ivBytes2.length);
