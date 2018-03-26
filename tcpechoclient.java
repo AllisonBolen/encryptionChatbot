@@ -20,7 +20,6 @@ class tcpechoclient {
         byte encryptedsecret[] = ct.RSAEncrypt(s.getEncoded());
         SecureRandom r = new SecureRandom();
 
-
         try {
             System.out.println("What is the server's IP address?");
             String IP = scan.nextLine();
@@ -33,31 +32,44 @@ class tcpechoclient {
             // send initial sym key to server for this client
             ByteBuffer buffer = ByteBuffer.wrap(encryptedsecret);
             sc.write(buffer);
+            System.out.println("Got symKey from client");
 
             // create thread for this client
             TcpClientThread t = new TcpClientThread(sc, ct, s);
             t.start();
             while (true) {
                 // create random iv params
-                SecureRandom r2 = new SecureRandom();
+                //SecureRandom r2 = new SecureRandom();
                 byte ivBytes2[] = new byte[16];
+                r.nextBytes(ivBytes2);
                 IvParameterSpec iv2 = new IvParameterSpec(ivBytes2);
-                r2.nextBytes(ivBytes2);
 
                 Console cons = System.console();
                 String m = cons.readLine("Enter your message: ");
 
                 if (m.equals("Quit")) {
+                    // encrypt message
                     byte ciphertext[] = ct.encrypt(m.getBytes(), s, iv2);
                     ByteBuffer reffub = ByteBuffer.wrap(ivBytes2).wrap(ciphertext);
                     sc.write(reffub);
+
                     sc.close();
                     System.exit(0);
                 } else {
-                    // we need to send the sym key over at some point along with the iv
+                    // encrypt the message
                     byte ciphertext[] = ct.encrypt(m.getBytes(), s, iv2);
-                    ByteBuffer reffub = ByteBuffer.wrap(ivBytes2).wrap(ciphertext);
+                    System.out.println("Cipher: "+ ciphertext + " " + " length: " + ciphertext.length);
+                    System.out.println("IvBytes: "+ ivBytes2 + " " + " length: " + ivBytes2.length);
+                    ByteBuffer reffub = ByteBuffer.allocate(ciphertext.length + ivBytes2.length);
+                    reffub.put(ivBytes2);
+                    reffub.put(ciphertext);
+                    reffub.flip();
+                    byte total[] = new byte[reffub.remaining()];
+                    reffub.get(total);
+                    reffub.flip();
                     sc.write(reffub);
+
+
                 }
             }
         } catch (IOException e) {
@@ -86,15 +98,19 @@ class TcpClientThread extends Thread {
                 buf2.flip();
                 byte[] a = new byte[buf2.remaining()];
                 buf2.get(a);
+                //////////////////////
+
                 byte[] ivBytesReceived = Arrays.copyOfRange(a, 0, 16);
                 IvParameterSpec ivReceived = new IvParameterSpec(ivBytesReceived);
 
-                String message = new String(Arrays.copyOfRange(a, 16, a.length));
+                byte[] A = Arrays.copyOfRange(a, 16, a.length);
+                System.out.println("Cipher: "+ A + " " + " length: " + A.length);
+                System.out.println("IvBytes: "+ ivBytesReceived + " " + " length: " + ivBytesReceived.length);
 
-                // decrypt message
-                byte decryptedplaintext[] = ct.decrypt(a, s, ivReceived);
-                String dpt = new String(decryptedplaintext);
+                byte[] decryptedplaintext = ct.decrypt(A, s, ivReceived);
+                String message = new String(decryptedplaintext);
 
+                ////////////////////////
                 System.out.println("\nGot from server: " + message);
                 if (message.equals("Quit")) {
                     ByteBuffer buf = ByteBuffer.wrap(message.getBytes());

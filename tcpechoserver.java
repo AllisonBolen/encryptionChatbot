@@ -27,6 +27,7 @@ class tcpechoserver {
         // map to store all connected client ips and threads
         ConcurrentHashMap<TcpServerThread, SocketChannel> clientMap = new ConcurrentHashMap<TcpServerThread, SocketChannel>();
         Map<TcpServerThread, SocketChannel> map = clientMap;
+
         try {
             System.out.println("Enter a port for the server to run on: ");
             int port = scan.nextInt();
@@ -96,21 +97,19 @@ class TcpServerThread extends Thread {
                 buffer.flip();
                 byte[] a = new byte[buffer.remaining()];
                 buffer.get(a);
-                System.out.println("lenght of whole A" + a.length);
 
-                // decrypt messgage
+                ///////////////////// decrypt messgage
                 byte[] ivBytesReceived = Arrays.copyOfRange(a, 0, 16);
                 IvParameterSpec ivReceived = new IvParameterSpec(ivBytesReceived);
-                System.out.println("length of whole ivBR" + ivBytesReceived.length);
 
-                byte[] A = Arrays.copyOfRange(a, 16, a.length-1);
+                byte[] A = Arrays.copyOfRange(a, 16, a.length);
+                System.out.println("Cipher: "+ A + " " + " length: " + A.length);
+                System.out.println("IvBytes: "+ ivBytesReceived + " " + " length: " + ivBytesReceived.length);
 
-                // decrypt message
-                byte decryptedplaintext[] = ct.decrypt(A, this.getSymKey(), ivReceived);
+                byte[] decryptedplaintext = ct.decrypt(A, this.getSymKey(), ivReceived);
                 String message = new String(decryptedplaintext);
 
-
-                //String message = new String(a);
+                /////////////////////
                 System.out.println("Got from client: " + message);
                 if (message.equals("Quit")) {
                     sc.close();
@@ -205,9 +204,10 @@ class TcpServerThread extends Thread {
                                     String m10 = "From: " + this.getId() + " Message: " + data;
                                     SocketChannel sock = entry.getValue();
                                     String m9 = "Sending: '" + data + "' to " + name;
-                                    send(sc, m9, entry.getKey().symKey);
-                                    ByteBuffer buf2 = ByteBuffer.wrap(m10.getBytes());
-                                    sock.write(buf2);
+                                    send(sc, m9, this.symKey);
+                                    //ByteBuffer buf2 = ByteBuffer.wrap(m10.getBytes());
+                                    //sock.write(buf2);
+                                    send(sock, m10, entry.getKey().symKey );
                                 }
                             }
                             if (!sent) {
@@ -277,9 +277,16 @@ class TcpServerThread extends Thread {
         IvParameterSpec iv = new IvParameterSpec(ivbytes);
         byte[] enMess = ct.encrypt(mes.getBytes(), symKey, iv);
 
-        ByteBuffer buf = ByteBuffer.wrap(enMess);
+        //ByteBuffer buf = ByteBuffer.wrap(ivbytes).wrap(enMess);
+        ByteBuffer reffub = ByteBuffer.allocate(enMess.length + ivbytes.length);
+        reffub.put(ivbytes);
+        reffub.put(enMess);
+        reffub.flip();
+        byte total[] = new byte[reffub.remaining()];
+        reffub.get(total);
+        reffub.flip();
         try {
-            socket.write(buf);
+            socket.write(reffub);
         } catch (IOException e) {
             // print error
             System.out.println("Got an IO Exception HERE 5");
