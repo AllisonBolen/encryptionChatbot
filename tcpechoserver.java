@@ -55,7 +55,6 @@ class tcpechoserver {
                 if (!clientMap.containsKey(sc.getRemoteAddress())) {
                     clientMap.putIfAbsent(t, sc);
                 }
-                //System.out.println(clientMap.toString());
                 // this can be condensed and use the map to loop
                 for (Map.Entry<TcpServerThread, SocketChannel> entry : map.entrySet()) {
                     entry.getKey().updateMap(clientMap);
@@ -100,16 +99,11 @@ class TcpServerThread extends Thread {
                 ///////////////////// decrypt messgage
                 byte[] ivBytesReceived = Arrays.copyOfRange(a, 0, 16);
                 IvParameterSpec ivReceived = new IvParameterSpec(ivBytesReceived);
-                System.out.println("a: "+ a + " " + " length: " + a.length);
-
                 byte[] A = Arrays.copyOfRange(a, 16, a.length);
-                System.out.println("Cipher: "+ A + " " + " length: " + A.length);
-                System.out.println("IvBytes: "+ ivBytesReceived + " " + " length: " + ivBytesReceived.length);
-
                 byte[] decryptedplaintext = ct.decrypt(A, this.getSymKey(), ivReceived);
                 String message = new String(decryptedplaintext);
-
                 /////////////////////
+
                 System.out.println("Got from client: " + message);
                 if (message.equals("Quit")) {
                     sc.close();
@@ -240,13 +234,8 @@ class TcpServerThread extends Thread {
             for (Map.Entry<TcpServerThread, SocketChannel> entry : map.entrySet()) {
                 TcpServerThread t = entry.getKey();
                 if(t.isRunning()) {
-                    System.out.println("here 2: " + t.getId());
-
                     SocketChannel s = entry.getValue();
-                    System.out.println("here 3");
-
                     data = data + "\nClient id: " + t.getId() + ", " + "IPAddress: " + s.getRemoteAddress();
-                    System.out.println("here 4");
                 }
             }
         } catch (Exception e) {

@@ -65,8 +65,6 @@ class tcpechoclient {
                     // encrypt the message
                     byte[] ciphertext = ct.encrypt(m.getBytes(), s, iv2);
                     //
-                    System.out.println("Cipher: "+ ciphertext + " " + " length: " + ciphertext.length);
-                    System.out.println("IvBytes: "+ ivBytes2 + " " + " length: " + ivBytes2.length);
                     ByteBuffer reffub = ByteBuffer.allocate(ciphertext.length + ivBytes2.length);
                     reffub.put(ivBytes2);
                     reffub.put(ciphertext);
@@ -75,8 +73,6 @@ class tcpechoclient {
                     reffub.get(total);
                     reffub.flip();
                     sc.write(reffub);
-
-
                 }
             }
         } catch (IOException e) {
@@ -107,17 +103,15 @@ class TcpClientThread extends Thread {
                 buf2.flip();
                 byte[] a = new byte[buf2.remaining()];
                 buf2.get(a);
-                //////////////////////
 
+                ////////////////////// decrypt
                 byte[] ivBytesReceived = Arrays.copyOfRange(a, 0, 16);
                 IvParameterSpec ivReceived = new IvParameterSpec(ivBytesReceived);
-
                 byte[] A = Arrays.copyOfRange(a, 16, a.length);
-
                 byte[] decryptedplaintext = ct.decrypt(A, s, ivReceived);
                 String message = new String(decryptedplaintext);
-
                 ////////////////////////
+
                 System.out.println("\nGot from server: " + message);
                 if (message.equals("Quit")) {
                     byte ivB2[] = new byte[16];
