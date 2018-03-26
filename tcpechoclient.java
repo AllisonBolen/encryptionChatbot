@@ -19,9 +19,7 @@ class tcpechoclient {
         SecretKey s = ct.generateAESKey();
         byte encryptedsecret[] = ct.RSAEncrypt(s.getEncoded());
         SecureRandom r = new SecureRandom();
-        byte ivBytes[] = new byte[16];
-        IvParameterSpec iv = new IvParameterSpec(ivBytes);
-        r.nextBytes(ivBytes);
+
 
         try {
             System.out.println("What is the server's IP address?");
@@ -33,7 +31,7 @@ class tcpechoclient {
             System.out.println("Connected to Chat Server");
 
             // send initial sym key to server for this client
-            ByteBuffer buffer = ByteBuffer.wrap(ivBytes).wrap(encryptedsecret);
+            ByteBuffer buffer = ByteBuffer.wrap(encryptedsecret);
             sc.write(buffer);
 
             // create thread for this client
@@ -43,7 +41,7 @@ class tcpechoclient {
                 // create random iv params
                 SecureRandom r2 = new SecureRandom();
                 byte ivBytes2[] = new byte[16];
-                IvParameterSpec iv2 = new IvParameterSpec(ivBytes);
+                IvParameterSpec iv2 = new IvParameterSpec(ivBytes2);
                 r2.nextBytes(ivBytes2);
 
                 Console cons = System.console();
@@ -90,7 +88,6 @@ class TcpClientThread extends Thread {
                 buf2.get(a);
                 byte[] ivBytesReceived = Arrays.copyOfRange(a, 0, 16);
                 IvParameterSpec ivReceived = new IvParameterSpec(ivBytesReceived);
-//                r2.nextBytes(ivBytesReceived);
 
                 String message = new String(Arrays.copyOfRange(a, 16, a.length));
 

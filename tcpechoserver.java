@@ -9,12 +9,18 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
+import java.util.Arrays;
+import javax.crypto.*;
+import javax.crypto.spec.*;
+import java.security.*;
+import java.security.spec.*;
+import javax.xml.bind.DatatypeConverter;
 
 
 class tcpechoserver {
     public static void main(String args[]) {
-	cryptotest ct = new cryptotest();
+	    cryptotest ct = new cryptotest();
+	    ct.setPrivateKey("RSApriv.der");
         Scanner scan = new Scanner(System.in);
         // list to store relevent code for the socket
         Vector<TcpServerThread> threadList = new Vector<TcpServerThread>();
@@ -30,12 +36,26 @@ class tcpechoserver {
             while (true) {
                 SocketChannel sc = c.accept();
                 System.out.println("Client Connected: " + sc.getRemoteAddress());
-                TcpServerThread t = new TcpServerThread(sc, clientMap);
+
+                // get sym key for the thread byt decrypting it by rsa save that key to the thread or make a map of keys to threads
+                ByteBuffer buffer = ByteBuffer.allocate(4096);
+                sc.read(buffer);
+                buffer.flip();
+                byte[] a = new byte[buffer.remaining()];
+                buffer.get(a);
+
+                // key
+                //String message = new String(Arrays.copyOfRange(a, 16, a.length));
+                // decyrpt a for the key we need
+                byte decryptedsecret[] = ct.RSADecrypt(a);
+                SecretKey ds = new SecretKeySpec(decryptedsecret,"AES");
+
+                TcpServerThread t = new TcpServerThread(sc, clientMap, ct, ds);
                 threadList.add(t);
                 if (!clientMap.containsKey(sc.getRemoteAddress())) {
                     clientMap.putIfAbsent(t, sc);
                 }
-                System.out.println(clientMap.toString());
+                //System.out.println(clientMap.toString());
                 // this can be condensed and use the map to loop
                 for (Map.Entry<TcpServerThread, SocketChannel> entry : map.entrySet()) {
                     entry.getKey().updateMap(clientMap);
@@ -53,13 +73,18 @@ class TcpServerThread extends Thread {
     SocketChannel tempSc;
     Map<TcpServerThread, SocketChannel> map;
     ConcurrentHashMap<TcpServerThread, SocketChannel> clientMap;
+    cryptotest ct;
+    SecretKey symKey;
+    SecureRandom r = new SecureRandom();
 
     private boolean running = true;
 
-    TcpServerThread(SocketChannel channel, ConcurrentHashMap<TcpServerThread, SocketChannel> cMap) {
+    TcpServerThread(SocketChannel channel, ConcurrentHashMap<TcpServerThread, SocketChannel> cMap, cryptotest c, SecretKey sk) {
         sc = channel;
         clientMap = cMap;
         map = clientMap;
+        ct=c;
+        symKey = sk;
     }
 
     public void run() {
@@ -71,7 +96,21 @@ class TcpServerThread extends Thread {
                 buffer.flip();
                 byte[] a = new byte[buffer.remaining()];
                 buffer.get(a);
-                String message = new String(a);
+                System.out.println("lenght of whole A" + a.length);
+
+                // decrypt messgage
+                byte[] ivBytesReceived = Arrays.copyOfRange(a, 0, 16);
+                IvParameterSpec ivReceived = new IvParameterSpec(ivBytesReceived);
+                System.out.println("length of whole ivBR" + ivBytesReceived.length);
+
+                byte[] A = Arrays.copyOfRange(a, 16, a.length-1);
+
+                // decrypt message
+                byte decryptedplaintext[] = ct.decrypt(A, this.getSymKey(), ivReceived);
+                String message = new String(decryptedplaintext);
+
+
+                //String message = new String(a);
                 System.out.println("Got from client: " + message);
                 if (message.equals("Quit")) {
                     sc.close();
@@ -93,30 +132,31 @@ class TcpServerThread extends Thread {
                                     entry.getKey().setRunning(false);
                                     SocketChannel sock = entry.getValue();
                                     String m1 = "Admin logged in successfully. Killing user: " + name;
-                                    send(sc, m1);
-                                    ByteBuffer buf2 = ByteBuffer.wrap(m10.getBytes());
-                                    sock.write(buf2);
+                                    send(sc, m1, this.symKey);
+                                    send(sock, m10, entry.getKey().symKey);
+//                                    ByteBuffer buf2 = ByteBuffer.wrap(m10.getBytes());
+//                                    sock.write(buf2);
                                 }
                             }
                             if (!sent) {
                                 String m9 = "Incorrect 'Killuser' command: '" + name + " 'isnt connected.";
-                                send(sc, m9);
+                                send(sc, m9, this.symKey);
                             }
 
                         } else if (!command.equals("killuser")) {
                             String m2 = "Incorrect admin command format: use COMMAND INTEGER PASSWORD format";
-                            send(sc, m2);
+                            send(sc, m2, this.symKey);
                         } else {
                             String m3 = "Incorrect admin password.";
-                            send(sc, m3);
+                            send(sc, m3, this.symKey);
                         }
                     } catch (Exception e) {
                         String m4 = "Incorrect admin command format: use COMMAND INTEGER PASSWORD format";
-                        send(sc, m4);
+                        send(sc, m4, this.symKey);
                     }
 
                 } else if (message.contains("list connections")) {
-                    send(sc, printMap());
+                    send(sc, printMap(), this.symKey);
                 } else if (message.contains("broadcast")) { // broad cast command
 
                     try {
@@ -128,17 +168,17 @@ class TcpServerThread extends Thread {
                         }
                         if (!bd.equals("broadcast")) { // check proper command trigger statment in index one of input if not send error
                             String m7 = "Incorrect 'Broadcast' command format. Use: 'Broadcast MESSAGE'.";
-                            send(sc, m7);
+                            send(sc, m7, this.symKey);
                         } else { // broad cast to all scockets in map
                             String info = "From Broadcast: " + data;
                             for (Map.Entry<TcpServerThread, SocketChannel> entry : map.entrySet()) {
                                 ByteBuffer buf = ByteBuffer.wrap(info.getBytes());
-                                send(entry.getValue(), info);
+                                send(entry.getValue(), info, entry.getKey().symKey);
                             }
                         }
                     } catch (Exception e) {
                         String m8 = "Incorrect 'Broadcast' command format. Use: 'Broadcast MESSAGE': Your message is blank.";
-                        send(sc, m8);
+                        send(sc, m8, this.symKey);
                     }
 
                 } else if (message.contains("sendTo")) {
@@ -155,7 +195,7 @@ class TcpServerThread extends Thread {
                         // check proper command trigger statment in index one of input if not send error
                         if (!sendto.equals("sendTo")) {
                             String m7 = "Incorrect 'SendTo' command format. Use: 'SendTo USER MESSAGE'.";
-                            send(sc, m7);
+                            send(sc, m7, this.symKey);
                         } else {
                             boolean sent = false;
                             // needs to find scoket with name mathc to user input htread other than that logic is good
@@ -165,19 +205,19 @@ class TcpServerThread extends Thread {
                                     String m10 = "From: " + this.getId() + " Message: " + data;
                                     SocketChannel sock = entry.getValue();
                                     String m9 = "Sending: '" + data + "' to " + name;
-                                    send(sc, m9);
+                                    send(sc, m9, entry.getKey().symKey);
                                     ByteBuffer buf2 = ByteBuffer.wrap(m10.getBytes());
                                     sock.write(buf2);
                                 }
                             }
                             if (!sent) {
                                 String m9 = "Incorrect 'SendTo' command: '" + name + " 'isnt connected.";
-                                send(sc, m9);
+                                send(sc, m9, this.symKey);
                             }
                         }
                     } catch (Exception e) {
                         String m8 = "Incorrect 'SendTo...' command format. Use 'SendTo USER MESSAGE'. Your message is blank.";
-                        send(sc, m8);
+                        send(sc, m8, this.symKey);
                     }
 
                 } else {
@@ -218,6 +258,10 @@ class TcpServerThread extends Thread {
         return data;
     }
 
+    public SecretKey getSymKey() {
+        return symKey;
+    }
+
     public boolean isRunning() {
         return running;
     }
@@ -226,8 +270,14 @@ class TcpServerThread extends Thread {
         this.running = running;
     }
 
-    void send(SocketChannel socket, String mes) {
-        ByteBuffer buf = ByteBuffer.wrap(mes.getBytes());
+    void send(SocketChannel socket, String mes, SecretKey symKey) {
+        // encrpyt message before sending
+        byte ivbytes[] = new byte[16];
+        r.nextBytes(ivbytes);
+        IvParameterSpec iv = new IvParameterSpec(ivbytes);
+        byte[] enMess = ct.encrypt(mes.getBytes(), symKey, iv);
+
+        ByteBuffer buf = ByteBuffer.wrap(enMess);
         try {
             socket.write(buf);
         } catch (IOException e) {
